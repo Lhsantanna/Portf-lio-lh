@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Criação de Sites — Presença Digital que Deixa Marca</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            body: ['Inter', 'sans-serif'],
+            display: ['Instrument Serif', 'serif'],
+          },
+          colors: {
+            bg: 'hsl(0 0% 4%)',
+            surface: 'hsl(0 0% 8%)',
+            'text-primary': 'hsl(0 0% 96%)',
+            muted: 'hsl(0 0% 53%)',
+            stroke: 'hsl(0 0% 12%)',
+          },
+          animation: {
+            'role-fade': 'role-fade-in 0.4s ease-out forwards',
+            'scroll-down': 'scroll-down 1.5s ease-in-out infinite',
+            'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          },
+          keyframes: {
+            'role-fade-in': {
+              '0%': { opacity: '0', transform: 'translateY(8px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            },
+            'scroll-down': {
+              '0%': { transform: 'translateY(-100%)' },
+              '100%': { transform: 'translateY(200%)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- GSAP & Plugins -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  
+  <!-- HLS.js para vídeos em streaming -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    :root {
+      --bg: 0 0% 4%;
+      --surface: 0 0% 8%;
+      --text: 0 0% 96%;
+      --muted: 0 0% 53%;
+      --stroke: 0 0% 12%;
+    }
+
+    body {
+      background-color: hsl(var(--bg));
+      color: hsl(var(--text));
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* Classe utilitária de gradiente acentuado */
+    .accent-gradient {
+      background: linear-gradient(90deg, #89AACC 0%, #4E85BF 100%);
+    }
+
+    .accent-border-gradient {
+      position: relative;
+    }
+
+    .accent-border-gradient::before {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(90deg, #89AACC 0%, #4E85BF 100%);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .accent-border-gradient:hover::before {
+      opacity: 1;
+    }
+
+    /* Animação de gradiente contínuo */
+    @keyframes gradient-shift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .animate-gradient-shift {
+      background-size: 200% 200%;
+      animation: gradient-shift 6s ease infinite;
+    }
+
+    /* Padrão de textura de meio-tom */
+    .halftone-overlay {
+      background-image: radial-gradient(circle, #000 1px, transparent 1px);
+      background-size: 4px 4px;
+    }
+
+    /* Ocultar barra de rolagem mas permitir navegação */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Barra de rolagem personalizada */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: hsl(0 0% 4%);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: hsl(0 0% 20%);
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: hsl(0 0% 35%);
+    }
+  </style>
+</head>
+<body class="bg-bg text-text-primary antialiased selection:bg-muted/30 selection:text-text-primary">
+
+  <!-- ================= SEÇÃO 1: TELA DE CARREGAMENTO (LOADING SCREEN) ================= -->
+  <div id="loader" class="fixed inset-0 z-[9999] bg-bg flex flex-col justify-between p-6 sm:p-10 select-none pointer-events-auto">
+    <!-- Barra Superior -->
+    <div class="flex justify-between items-center">
+      <span class="text-xs text-muted uppercase tracking-[0.3em] font-medium opacity-0 -translate-y-4 loader-fade-in">LH SOLUDEV</span>
+      <span class="text-xs text-muted uppercase tracking-[0.3em] font-medium opacity-0 -translate-y-4 loader-fade-in">© '26</span>
+    </div>
+
+    <!-- Palavras em Rotação Central -->
+    <div class="relative h-24 overflow-hidden flex items-center justify-center">
+      <div id="loader-word" class="text-4xl md:text-6xl lg:text-7xl font-display italic text-text-primary/80 transition-all duration-300 transform translate-y-8 opacity-0 text-center">
+        Design
+      </div>
+    </div>
+
+    <!-- Contador e Barra de Progresso Superior -->
+    <div class="w-full space-y-4">
+      <div class="flex justify-between items-end">
+        <span class="text-xs text-muted/60 uppercase tracking-widest hidden sm:inline">INICIALIZANDO AMBIENTE</span>
+        <div id="loader-counter" class="text-6xl md:text-8xl lg:text-9xl font-display text-text-primary tabular-nums font-light leading-none">
+          006
+        </div>
+      </div>
+      <!-- Trilho da Barra de Progresso -->
+      <div class="w-full h-[3px] bg-stroke/50 rounded-full overflow-hidden">
+        <div id="loader-progress" class="h-full accent-gradient transform origin-left scale-x-0 transition-transform duration-75 ease-out" style="box-shadow: 0 0 12px rgba(137, 170, 204, 0.5);"></div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ================= NAVBAR ================= -->
+  <header class="fixed top-0 left-0 right-0 z-50 flex justify-center pt-3 sm:pt-4 md:pt-6 px-3 sm:px-4 pointer-events-auto">
+    <nav id="navbar-inner" class="inline-flex items-center rounded-full backdrop-blur-md border border-white/10 bg-surface/80 px-2.5 py-1.5 sm:py-2 transition-all duration-300 shadow-lg shadow-black/20 max-w-full overflow-x-auto no-scrollbar">
+      
+      <!-- Logotipo LH Soludev -->
+      <a href="#hero" class="relative group flex items-center p-0.5 rounded-full transition-transform duration-300 hover:scale-105 flex-shrink-0" aria-label="Início - LH Soludev">
+        <div class="relative w-9 h-9 sm:w-10 sm:h-10 rounded-full p-[1px] accent-gradient shadow-md shadow-sky-900/20 group-hover:shadow-sky-500/30 transition-all duration-300">
+          <div class="w-full h-full bg-surface rounded-full flex items-center justify-center p-0.5 overflow-hidden">
+            <svg viewBox="0 0 120 120" class="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="60" cy="60" r="56" fill="#08090C" />
+              <circle cx="60" cy="60" r="52" stroke="url(#logo-grad)" stroke-width="3" stroke-dasharray="220 80" stroke-linecap="round" class="transition-transform duration-700 ease-out group-hover:rotate-180 origin-center" />
+              <text x="60" y="50" font-family="'Inter', sans-serif" font-weight="800" font-size="38" fill="#FFFFFF" text-anchor="middle" dominant-baseline="central" letter-spacing="-1">LH</text>
+              <text x="60" y="80" font-family="'Inter', sans-serif" font-weight="700" font-size="13" fill="#89AACC" text-anchor="middle" dominant-baseline="central" letter-spacing="1.5">SOLUDEV</text>
+              <defs>
+                <linearGradient id="logo-grad" x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#89AACC"/>
+                  <stop offset="1" stop-color="#4E85BF"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+        </div>
+      </a>
+
+      <!-- Divisor -->
+      <div class="w-px h-4 sm:h-5 bg-stroke mx-1.5 sm:mx-2 flex-shrink-0"></div>
+
+      <!-- Links de Navegação -->
+      <div class="flex items-center space-x-1 sm:space-x-1.5 flex-shrink-0">
+        <a href="#hero" class="nav-link text-[11px] sm:text-xs md:text-sm rounded-full px-2.5 sm:px-3.5 py-1 sm:py-1.5 text-text-primary bg-stroke/50 transition-colors">Início</a>
+        <a href="#apresentacao" class="nav-link text-[11px] sm:text-xs md:text-sm rounded-full px-2.5 sm:px-3.5 py-1 sm:py-1.5 text-muted hover:text-text-primary hover:bg-stroke/40 transition-colors">Sobre</a>
+        <a href="#selected-works" class="nav-link text-[11px] sm:text-xs md:text-sm rounded-full px-2.5 sm:px-3.5 py-1 sm:py-1.5 text-muted hover:text-text-primary hover:bg-stroke/40 transition-colors">Projetos</a>
+        <a href="#diferenciais" class="nav-link text-xs sm:text-sm rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-muted hover:text-text-primary hover:bg-stroke/40 transition-colors hidden md:block">Diferenciais</a>
+        <a href="#journal" class="nav-link text-xs sm:text-sm rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-muted hover:text-text-primary hover:bg-stroke/40 transition-colors hidden lg:block">Insights</a>
+      </div>
+
+      <!-- Divisor -->
+      <div class="w-px h-4 sm:h-5 bg-stroke mx-1.5 sm:mx-2 flex-shrink-0"></div>
+
+      <!-- Botão Criar meu site CTA para WhatsApp -->
+      <a href="https://wa.me/5511970287704?text=Ol%C3%A1!%20Gostei%20do%20seu%20portf%C3%B3lio%20e%20gostaria%20de%20criar%20um%20site%20para%20o%20meu%20neg%C3%B3cio." target="_blank" rel="noopener noreferrer" class="relative group rounded-full p-[1px] overflow-hidden text-[11px] sm:text-xs md:text-sm flex-shrink-0 cursor-pointer">
+        <span class="absolute inset-0 accent-gradient opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full animate-gradient-shift"></span>
+        <span class="relative block px-3 sm:px-4 py-1 sm:py-1.5 bg-surface hover:bg-surface/90 rounded-full backdrop-blur-md text-text-primary font-medium flex items-center gap-1">
+          Criar site <span class="inline-block transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5">✉</span>
+        </span>
+      </a>
+    </nav>
+  </header>
+
+
+  <!-- ================= CONTEÚDO PRINCIPAL ================= -->
+  <main class="relative z-10">
+
+    <!-- ================= SEÇÃO 2: HERO PRINCIPAL ================= -->
+    <section id="hero" class="relative min-h-[100dvh] flex flex-col justify-center items-center text-center px-4 sm:px-6 overflow-hidden pt-28 sm:pt-32 pb-16 sm:pb-20">
+      <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+        <video id="hero-video" class="absolute top-1/2 left-1/2 min-w-full min-h-full w-auto h-auto object-cover -translate-x-1/2 -translate-y-1/2 opacity-60" autoplay muted loop playsinline></video>
+        <div class="absolute inset-0 bg-black/40"></div>
+        <div class="absolute bottom-0 left-0 right-0 h-32 sm:h-48 bg-gradient-to-t from-bg via-bg/80 to-transparent"></div>
+      </div>
+
+      <div class="relative z-10 max-w-4xl mx-auto flex flex-col items-center my-auto">
+        <div class="hero-blur-in text-[10px] sm:text-xs text-muted uppercase tracking-[0.25em] sm:tracking-[0.3em] mb-5 sm:mb-8 border border-white/10 px-3.5 sm:px-4 py-1.5 rounded-full bg-surface/50 backdrop-blur-md">
+          LH SOLUDEV • '26
+        </div>
+
+        <h1 class="hero-name-reveal text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-display italic leading-[1.05] sm:leading-[0.92] tracking-tight text-text-primary mb-6 sm:mb-8 px-2">
+          Seu negócio merece um site à altura.
+        </h1>
+
+        <p class="hero-blur-in text-sm sm:text-base md:text-lg text-muted max-w-2xl mb-8 sm:mb-10 leading-relaxed font-normal px-2 sm:px-4">
+          Criamos sites modernos, estratégicos e pensados para transformar visitantes em clientes.
+        </p>
+
+        <div class="hero-blur-in flex flex-col sm:flex-row gap-3.5 sm:gap-4 justify-center items-center w-full sm:w-auto px-4 sm:px-0">
+          <a href="#selected-works" class="group relative rounded-full p-[1px] transition-transform duration-300 hover:scale-105 active:scale-95 w-full sm:w-auto cursor-pointer">
+            <div class="absolute inset-0 accent-gradient rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div class="relative rounded-full px-7 py-3.5 bg-text-primary text-bg font-medium text-sm group-hover:bg-bg group-hover:text-text-primary transition-colors duration-300 flex items-center justify-center gap-2 w-full sm:w-auto">
+              Ver projetos ↗
+            </div>
+          </a>
+
+          <a href="https://wa.me/5511970287704?text=Ol%C3%A1!%20Gostaria%20de%20solicitar%20um%20or%C3%A7amento%20para%20criar%20meu%20site." target="_blank" rel="noopener noreferrer" class="group relative rounded-full p-[1px] transition-transform duration-300 hover:scale-105 active:scale-95 w-full sm:w-auto cursor-pointer">
+            <div class="absolute inset-0 accent-gradient rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div class="relative rounded-full px-7 py-3.5 border border-stroke bg-bg/80 backdrop-blur-sm text-text-primary font-medium text-sm transition-colors duration-300 flex items-center justify-center gap-2 w-full sm:w-auto">
+              Criar meu site ✉
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <div class="hidden sm:flex absolute bottom-6 left-1/2 -translate-x-1/2 flex-col items-center gap-2 z-10">
+        <span class="text-[10px] text-muted uppercase tracking-[0.2em]">ROLE PARA BAIXO</span>
+        <div class="w-px h-8 bg-stroke relative overflow-hidden">
+          <div class="w-full h-1/2 accent-gradient absolute top-0 left-0 animate-scroll-down"></div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ================= SEÇÃO 3: SEÇÃO DE APRESENTAÇÃO ================= -->
+    <section id="apresentacao" class="bg-bg py-16 sm:py-24 md:py-32 border-t border-stroke/50 relative">
+      <div class="max-w-[1200px] mx-auto px-5 sm:px-8 md:px-10 lg:px-16">
+        <div class="reveal-section grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-10 items-center">
+          
+          <div class="lg:col-span-7">
+            <div class="flex items-center gap-3 mb-3 sm:mb-4">
+              <span class="w-6 sm:w-8 h-px bg-stroke"></span>
+              <span class="text-[11px] sm:text-xs text-muted uppercase tracking-[0.25em] sm:tracking-[0.3em]">SOBRE NOSSO TRABALHO</span>
+            </div>
+            <h2 class="text-3xl sm:text-5xl md:text-6xl font-light text-text-primary leading-tight mb-4 sm:mb-6">
+              Presença digital <br class="hidden sm:inline" />
+              <span class="font-display italic text-text-primary">que deixa marca.</span>
+            </h2>
+          </div>
+
+          <div class="lg:col-span-5 flex flex-col justify-between h-full space-y-6 sm:space-y-8">
+            <p class="text-sm sm:text-base text-muted leading-relaxed font-normal">
+              Não criamos apenas páginas bonitas. Criamos experiências digitais que valorizam sua marca, transmitem confiança e ajudam seu negócio a vender mais.
+            </p>
+            
+            <div class="flex flex-wrap gap-3 sm:gap-4 items-center">
+              <a href="#selected-works" class="group inline-flex items-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 rounded-full bg-text-primary text-bg text-xs sm:text-sm font-medium hover:bg-bg hover:text-text-primary border border-text-primary transition-all duration-300 cursor-pointer">
+                Ver projetos ↘
+              </a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SEÇÃO 4: PORTFÓLIO / PROJETOS ================= -->
+    <section id="selected-works" class="bg-bg py-16 sm:py-24 md:py-32 border-t border-stroke/50">
+      <div class="max-w-[1200px] mx-auto px-5 sm:px-8 md:px-10 lg:px-16">
+        
+        <div class="reveal-section flex flex-col md:flex-row md:items-end justify-between mb-12 sm:mb-16 gap-6">
+          <div>
+            <div class="flex items-center gap-3 mb-2 sm:mb-3">
+              <span class="w-6 sm:w-8 h-px bg-stroke"></span>
+              <span class="text-[11px] sm:text-xs text-muted uppercase tracking-[0.25em] sm:tracking-[0.3em]">TRABALHOS SELECIONADOS</span>
+            </div>
+            <h2 class="text-3xl sm:text-5xl lg:text-6xl font-light text-text-primary">
+              Projetos que <br class="hidden sm:inline" /><span class="font-display italic text-text-primary">falam por si.</span>
+            </h2>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 sm:gap-8">
+          
+          <!-- PROJETO 01: LH BURGER -->
+          <div class="bento-card group relative bg-surface border border-stroke rounded-3xl overflow-hidden md:col-span-7 min-h-[360px] sm:min-h-[420px] md:h-[480px] flex flex-col justify-between transition-all duration-300 hover:border-white/30 shadow-2xl">
+            <img src="https://images.unsplash.com/photo-1586190848861-99aa4a171e90?auto=format&fit=crop&w=1200&q=80" alt="LH Burger - Cardápio Digital" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 opacity-80" />
+            <div class="absolute inset-0 halftone-overlay opacity-25 mix-blend-multiply pointer-events-none"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-bg via-bg/40 to-black/60 pointer-events-none"></div>
+
+            <div class="relative z-20 p-6 sm:p-8 flex items-center justify-between gap-3">
+              <span class="text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-text-primary border border-white/20 px-3 py-1 rounded-full bg-surface/80 backdrop-blur-md">
+                GASTRONOMIA & DELIVERY
+              </span>
+              <span class="text-[10px] sm:text-xs font-mono text-muted bg-bg/80 border border-white/10 px-2.5 py-1 rounded-full backdrop-blur-md">2026</span>
+            </div>
+
+            <div class="relative z-20 p-6 sm:p-8 space-y-4 pointer-events-auto">
+              <div>
+                <h3 class="text-2xl sm:text-3xl font-display italic text-text-primary mb-2">LH Burger</h3>
+                <p class="text-xs sm:text-sm text-muted leading-relaxed max-w-md">
+                  Uma presença profissional para hamburgueria artesanal com cardápio digital moderno, fotos de alto impacto e canal direto de pedidos.
+                </p>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-3 pt-2">
+                <a href="https://lh-burger.vercel.app/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-text-primary text-bg font-medium text-xs sm:text-sm hover:bg-white transition-colors cursor-pointer">
+                  Acessar site ↗
+                </a>
+                <button onclick="openPreviewModal('https://lh-burger.vercel.app/', 'LH Burger')" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-surface/80 hover:bg-stroke border border-white/15 text-text-primary text-xs sm:text-sm backdrop-blur-md transition-colors cursor-pointer">
+                  <i data-lucide="eye" class="w-3.5 h-3.5"></i> Prévia rápida
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- PROJETO 02: GASTO NA FOTO -->
+          <div class="bento-card group relative bg-surface border border-stroke rounded-3xl overflow-hidden md:col-span-5 min-h-[360px] sm:min-h-[420px] md:h-[480px] flex flex-col justify-between transition-all duration-300 hover:border-white/30 shadow-2xl">
+            <img src="https://images.unsplash.com/photo-1554048612-b6a482bc67e5?auto=format&fit=crop&w=1200&q=80" alt="Gasto na Foto - Calculadora para Fotógrafos" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 opacity-80" />
+            <div class="absolute inset-0 halftone-overlay opacity-25 mix-blend-multiply pointer-events-none"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-bg via-bg/40 to-black/60 pointer-events-none"></div>
+
+            <div class="relative z-20 p-6 sm:p-8 flex items-center justify-between gap-3">
+              <span class="text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-text-primary border border-white/20 px-3 py-1 rounded-full bg-surface/80 backdrop-blur-md">
+                SaaS & FERRAMENTA
+              </span>
+              <span class="text-[10px] sm:text-xs font-mono text-muted bg-bg/80 border border-white/10 px-2.5 py-1 rounded-full backdrop-blur-md">2026</span>
+            </div>
+
+            <div class="relative z-20 p-6 sm:p-8 space-y-4 pointer-events-auto">
+              <div>
+                <h3 class="text-2xl sm:text-3xl font-display italic text-text-primary mb-2">Gasto na Foto</h3>
+                <p class="text-xs sm:text-sm text-muted leading-relaxed max-w-md">
+                  Uma aplicação web estratégica criada para fotógrafos calcularem custos, margem de lucro e enviarem orçamentos.
+                </p>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-3 pt-2">
+                <a href="https://gasto-na-foto-tau.vercel.app/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-text-primary text-bg font-medium text-xs sm:text-sm hover:bg-white transition-colors cursor-pointer">
+                  Acessar site ↗
+                </a>
+                <button onclick="openPreviewModal('https://gasto-na-foto-tau.vercel.app/', 'Gasto na Foto')" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-surface/80 hover:bg-stroke border border-white/15 text-text-primary text-xs sm:text-sm backdrop-blur-md transition-colors cursor-pointer">
+                  <i data-lucide="eye" class="w-3.5 h-3.5"></i> Prévia rápida
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- PROJETO 03: LH COFFE -->
+          <div class="bento-card group relative bg-surface border border-stroke rounded-3xl overflow-hidden md:col-span-5 min-h-[360px] sm:min-h-[420px] md:h-[480px] flex flex-col justify-between transition-all duration-300 hover:border-white/30 shadow-2xl">
+            <img src="https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=1200&q=80" alt="LH Coffe - Cafeteria Especial" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 opacity-80" />
+            <div class="absolute inset-0 halftone-overlay opacity-25 mix-blend-multiply pointer-events-none"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-bg via-bg/40 to-black/60 pointer-events-none"></div>
+
+            <div class="relative z-20 p-6 sm:p-8 flex items-center justify-between gap-3">
+              <span class="text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-text-primary border border-white/20 px-3 py-1 rounded-full bg-surface/80 backdrop-blur-md">
+                CAFETERIA & EXPERIÊNCIA
+              </span>
+              <span class="text-[10px] sm:text-xs font-mono text-muted bg-bg/80 border border-white/10 px-2.5 py-1 rounded-full backdrop-blur-md">2026</span>
+            </div>
+
+            <div class="relative z-20 p-6 sm:p-8 space-y-4 pointer-events-auto">
+              <div>
+                <h3 class="text-2xl sm:text-3xl font-display italic text-text-primary mb-2">LH Coffe</h3>
+                <p class="text-xs sm:text-sm text-muted leading-relaxed max-w-md">
+                  Apresentação sofisticada para cafeteria gourmet, com menu interativo de cafés especiais, atmosfera aconchegante e canal rápido para pedidos.
+                </p>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-3 pt-2">
+                <a href="https://lh-coffe.vercel.app/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-text-primary text-bg font-medium text-xs sm:text-sm hover:bg-white transition-colors cursor-pointer">
+                  Acessar site ↗
+                </a>
+                <button onclick="openPreviewModal('https://lh-coffe.vercel.app/', 'LH Coffe')" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-surface/80 hover:bg-stroke border border-white/15 text-text-primary text-xs sm:text-sm backdrop-blur-md transition-colors cursor-pointer">
+                  <i data-lucide="eye" class="w-3.5 h-3.5"></i> Prévia rápida
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- PROJETO 04: SUPER MARIO -->
+          <div class="bento-card group relative bg-surface border border-stroke rounded-3xl overflow-hidden md:col-span-7 min-h-[360px] sm:min-h-[420px] md:h-[480px] flex flex-col justify-between transition-all duration-300 hover:border-white/30 shadow-2xl">
+            <img src="https://images.unsplash.com/photo-1612287230202-1ff1d85d1bdf?auto=format&fit=crop&w=1600&q=80" alt="Projeto Super Mario" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 opacity-75" />
+            <div class="absolute inset-0 halftone-overlay opacity-25 mix-blend-multiply pointer-events-none"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-bg via-bg/50 to-black/70 pointer-events-none"></div>
+
+            <div class="relative z-20 p-6 sm:p-8 flex items-center justify-between gap-3">
+              <span class="text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-text-primary border border-white/20 px-3 py-1 rounded-full bg-surface/80 backdrop-blur-md">
+                ENTRETENIMENTO & PROMOÇÃO
+              </span>
+              <span class="text-[10px] sm:text-xs font-mono text-muted bg-bg/80 border border-white/10 px-2.5 py-1 rounded-full backdrop-blur-md">CRIADO HÁ 2 ANOS</span>
+            </div>
+
+            <div class="relative z-20 p-6 sm:p-8 space-y-4 pointer-events-auto">
+              <div>
+                <h3 class="text-2xl sm:text-3xl font-display italic text-text-primary mb-2">Super Mario — Lançamento</h3>
+                <p class="text-xs sm:text-sm text-muted leading-relaxed max-w-xl">
+                  Landing page temática interativa desenvolvida para o lançamento do filme Super Mario, contando com player de trailer em vídeo modal, apresentação dos personagens e formulário de inscrição.
+                </p>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-3 pt-2">
+                <a href="https://projeto-mario-kappa.vercel.app/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-text-primary text-bg font-medium text-xs sm:text-sm hover:bg-white transition-colors cursor-pointer">
+                  Acessar site ↗
+                </a>
+                <button onclick="openPreviewModal('https://projeto-mario-kappa.vercel.app/', 'Super Mario - Promoção')" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-surface/80 hover:bg-stroke border border-white/15 text-text-primary text-xs sm:text-sm backdrop-blur-md transition-colors cursor-pointer">
+                  <i data-lucide="eye" class="w-3.5 h-3.5"></i> Prévia rápida
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ================= SEÇÕES 5 & 6: DIFERENCIAIS E BENEFÍCIOS ================= -->
+    <section id="diferenciais" class="bg-bg py-16 sm:py-24 md:py-32 border-t border-stroke/50">
+      <div class="max-w-[1200px] mx-auto px-5 sm:px-8 md:px-10 lg:px-16">
+        
+        <div class="reveal-section mb-10 sm:mb-16 max-w-2xl">
+          <div class="flex items-center gap-3 mb-2 sm:mb-3">
+            <span class="w-6 sm:w-8 h-px bg-stroke"></span>
+            <span class="text-[11px] sm:text-xs text-muted uppercase tracking-[0.25em] sm:tracking-[0.3em]">POR QUE UM BOM SITE IMPORTA</span>
+          </div>
+          <h2 class="text-3xl sm:text-5xl lg:text-6xl font-light text-text-primary mb-4 sm:mb-6">
+            Seu site fala <br class="hidden sm:inline" /><span class="font-display italic text-text-primary">antes de você.</span>
+          </h2>
+          <p class="text-sm sm:text-base text-muted leading-relaxed font-normal">
+            Em poucos segundos, seu cliente decide se continua ou vai embora. Por isso, cada detalhe precisa transmitir profissionalismo, confiança e valor.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6 lg:gap-8">
+          
+          <div class="p-6 sm:p-8 rounded-3xl bg-surface/40 border border-stroke hover:border-white/20 transition-colors duration-300 flex flex-col justify-between">
+            <div>
+              <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl accent-gradient p-[1px] mb-5 sm:mb-6 flex items-center justify-center">
+                <div class="w-full h-full bg-surface rounded-[15px] flex items-center justify-center text-text-primary font-bold text-xs sm:text-sm">
+                  01
+                </div>
+              </div>
+              <h3 class="text-lg sm:text-xl font-medium text-text-primary uppercase tracking-wider mb-2 sm:mb-3">DESIGN</h3>
+              <p class="text-xs sm:text-sm text-muted leading-relaxed">
+                Visual moderno e profissional para fazer sua marca ser percebida pelo valor que realmente entrega.
+              </p>
+            </div>
+          </div>
+
+          <div class="p-6 sm:p-8 rounded-3xl bg-surface/40 border border-stroke hover:border-white/20 transition-colors duration-300 flex flex-col justify-between">
+            <div>
+              <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl accent-gradient p-[1px] mb-5 sm:mb-6 flex items-center justify-center">
+                <div class="w-full h-full bg-surface rounded-[15px] flex items-center justify-center text-text-primary font-bold text-xs sm:text-sm">
+                  02
+                </div>
+              </div>
+              <h3 class="text-lg sm:text-xl font-medium text-text-primary uppercase tracking-wider mb-2 sm:mb-3">ESTRATÉGIA</h3>
+              <p class="text-xs sm:text-sm text-muted leading-relaxed">
+                Estrutura pensada para guiar o visitante e facilitar o próximo passo.
+              </p>
+            </div>
+          </div>
+
+          <div class="p-6 sm:p-8 rounded-3xl bg-surface/40 border border-stroke hover:border-white/20 transition-colors duration-300 flex flex-col justify-between">
+            <div>
+              <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl accent-gradient p-[1px] mb-5 sm:mb-6 flex items-center justify-center">
+                <div class="w-full h-full bg-surface rounded-[15px] flex items-center justify-center text-text-primary font-bold text-xs sm:text-sm">
+                  03
+                </div>
+              </div>
+              <h3 class="text-lg sm:text-xl font-medium text-text-primary uppercase tracking-wider mb-2 sm:mb-3">PERFORMANCE</h3>
+              <p class="text-xs sm:text-sm text-muted leading-relaxed">
+                Sites rápidos, responsivos e preparados para funcionar bem em qualquer tela.
+              </p>
+            </div>
+          </div>
+
+          <div class="p-6 sm:p-8 rounded-3xl bg-surface/40 border border-stroke hover:border-white/20 transition-colors duration-300 flex flex-col justify-between">
+            <div>
+              <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl accent-gradient p-[1px] mb-5 sm:mb-6 flex items-center justify-center">
+                <div class="w-full h-full bg-surface rounded-[15px] flex items-center justify-center text-text-primary font-bold text-xs sm:text-sm">
+                  04
+                </div>
+              </div>
+              <h3 class="text-lg sm:text-xl font-medium text-text-primary uppercase tracking-wider mb-2 sm:mb-3">CONVERSÃO</h3>
+              <p class="text-xs sm:text-sm text-muted leading-relaxed">
+                Cada seção tem um propósito: despertar interesse, gerar confiança e incentivar a ação.
+              </p>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ================= SEÇÃO 7: SEÇÃO DE AUTORIDADE / NÚMEROS ================= -->
+    <section class="bg-bg py-12 sm:py-20 border-t border-b border-stroke/50">
+      <div class="max-w-[1200px] mx-auto px-5 sm:px-8 md:px-10 lg:px-16">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 text-center divide-y-0 sm:divide-y-0 md:divide-x divide-stroke/50">
+          
+          <div class="p-4 sm:p-2">
+            <span class="stat-number text-4xl sm:text-6xl lg:text-7xl font-display italic text-text-primary block mb-1 sm:mb-2" data-target="4">0</span>
+            <span class="text-[10px] sm:text-xs text-muted uppercase tracking-[0.15em] sm:tracking-[0.2em] font-medium leading-tight block">ANOS CRIANDO NA WEB</span>
+          </div>
+
+          <div class="p-4 sm:p-2">
+            <span class="stat-number text-4xl sm:text-6xl lg:text-7xl font-display italic text-text-primary block mb-1 sm:mb-2" data-target="19">0</span>
+            <span class="text-[10px] sm:text-xs text-muted uppercase tracking-[0.15em] sm:tracking-[0.2em] font-medium leading-tight block">PROJETOS DESENVOLVIDOS</span>
+          </div>
+
+          <div class="p-4 sm:p-2">
+            <span class="stat-number text-4xl sm:text-6xl lg:text-7xl font-display italic text-text-primary block mb-1 sm:mb-2" data-target="100">0</span>
+            <span class="text-[10px] sm:text-xs text-muted uppercase tracking-[0.15em] sm:tracking-[0.2em] font-medium leading-tight block">FOCO NO SEU NEGÓCIO</span>
+          </div>
+
+          <div class="p-4 sm:p-2">
+            <span class="stat-number text-4xl sm:text-6xl lg:text-7xl font-display italic text-text-primary block mb-1 sm:mb-2" data-target="24">0</span>
+            <span class="text-[10px] sm:text-xs text-muted uppercase tracking-[0.15em] sm:tracking-[0.2em] font-medium leading-tight block">ATENÇÃO A CADA DETALHE</span>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ================= SEÇÕES 8 & 9: CONTEÚDO / INSIGHTS ================= -->
+    <section id="journal" class="bg-bg py-16 sm:py-24 md:py-32">
+      <div class="max-w-[1200px] mx-auto px-5 sm:px-8 md:px-10 lg:px-16">
+        
+        <div class="reveal-section flex flex-col md:flex-row md:items-end justify-between mb-10 sm:mb-16 gap-6">
+          <div>
+            <div class="flex items-center gap-3 mb-2 sm:mb-3">
+              <span class="w-6 sm:w-8 h-px bg-stroke"></span>
+              <span class="text-[11px] sm:text-xs text-muted uppercase tracking-[0.25em] sm:tracking-[0.3em]">INSIGHTS</span>
+            </div>
+            <h2 class="text-3xl sm:text-5xl lg:text-6xl font-light text-text-primary">
+              Ideias que <br class="hidden sm:inline" /><span class="font-display italic text-text-primary">fazem diferença.</span>
+            </h2>
+          </div>
+          <span class="text-xs uppercase tracking-widest text-muted">
+            CLIQUE PARA LER O CONTEÚDO
+          </span>
+        </div>
+
+        <div class="space-y-4">
+          
+          <article onclick="openArticleModal(1)" class="journal-card group relative flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-5 md:p-6 bg-surface/30 hover:bg-surface border border-stroke rounded-3xl sm:rounded-full transition-all duration-300 gap-4 cursor-pointer hover:border-white/20">
+            <div class="flex items-center gap-3.5 sm:gap-6 w-full sm:w-auto">
+              <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-full overflow-hidden flex-shrink-0 border border-white/10">
+                <img src="https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&w=300&q=80" alt="Site Profissional" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+              </div>
+              <div>
+                <span class="text-[10px] sm:text-xs text-muted uppercase tracking-widest font-mono block mb-0.5">AGO 22, 2026</span>
+                <h3 class="text-base sm:text-lg md:text-xl font-medium text-text-primary group-hover:text-text-primary/90 transition-colors leading-snug">
+                  Por que seu negócio precisa de um site profissional
+                </h3>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-4 sm:gap-6 pt-2 sm:pt-0 border-t sm:border-t-0 border-stroke/40">
+              <span class="text-[11px] sm:text-xs text-text-primary font-mono bg-bg/80 px-3 py-1 rounded-full border border-stroke flex items-center gap-1.5">
+                <i data-lucide="clock" class="w-3 h-3 text-muted"></i> 3 min de leitura
+              </span>
+              <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-stroke flex items-center justify-center text-text-primary group-hover:border-white/30 group-hover:bg-text-primary group-hover:text-bg transition-all duration-300 text-xs sm:text-base">
+                ↗
+              </div>
+            </div>
+          </article>
+
+          <article onclick="openArticleModal(2)" class="journal-card group relative flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-5 md:p-6 bg-surface/30 hover:bg-surface border border-stroke rounded-3xl sm:rounded-full transition-all duration-300 gap-4 cursor-pointer hover:border-white/20">
+            <div class="flex items-center gap-3.5 sm:gap-6 w-full sm:w-auto">
+              <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-full overflow-hidden flex-shrink-0 border border-white/10">
+                <img src="https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=300&q=80" alt="Conversão de clientes" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+              </div>
+              <div>
+                <span class="text-[10px] sm:text-xs text-muted uppercase tracking-widest font-mono block mb-0.5">AGO 18, 2026</span>
+                <h3 class="text-base sm:text-lg md:text-xl font-medium text-text-primary group-hover:text-text-primary/90 transition-colors leading-snug">
+                  O que faz um site transformar visitas em clientes
+                </h3>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-4 sm:gap-6 pt-2 sm:pt-0 border-t sm:border-t-0 border-stroke/40">
+              <span class="text-[11px] sm:text-xs text-text-primary font-mono bg-bg/80 px-3 py-1 rounded-full border border-stroke flex items-center gap-1.5">
+                <i data-lucide="clock" class="w-3 h-3 text-muted"></i> 3 min de leitura
+              </span>
+              <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-stroke flex items-center justify-center text-text-primary group-hover:border-white/30 group-hover:bg-text-primary group-hover:text-bg transition-all duration-300 text-xs sm:text-base">
+                ↗
+              </div>
+            </div>
+          </article>
+
+          <article onclick="openArticleModal(3)" class="journal-card group relative flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-5 md:p-6 bg-surface/30 hover:bg-surface border border-stroke rounded-3xl sm:rounded-full transition-all duration-300 gap-4 cursor-pointer hover:border-white/20">
+            <div class="flex items-center gap-3.5 sm:gap-6 w-full sm:w-auto">
+              <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-full overflow-hidden flex-shrink-0 border border-white/10">
+                <img src="https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=300&q=80" alt="Aumento de confiança" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+              </div>
+              <div>
+                <span class="text-[10px] sm:text-xs text-muted uppercase tracking-widest font-mono block mb-0.5">AGO 12, 2026</span>
+                <h3 class="text-base sm:text-lg md:text-xl font-medium text-text-primary group-hover:text-text-primary/90 transition-colors leading-snug">
+                  5 detalhes que aumentam a confiança no seu site
+                </h3>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-4 sm:gap-6 pt-2 sm:pt-0 border-t sm:border-t-0 border-stroke/40">
+              <span class="text-[11px] sm:text-xs text-text-primary font-mono bg-bg/80 px-3 py-1 rounded-full border border-stroke flex items-center gap-1.5">
+                <i data-lucide="clock" class="w-3 h-3 text-muted"></i> 3 min de leitura
+              </span>
+              <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-stroke flex items-center justify-center text-text-primary group-hover:border-white/30 group-hover:bg-text-primary group-hover:text-bg transition-all duration-300 text-xs sm:text-base">
+                ↗
+              </div>
+            </div>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ================= SEÇÃO: RODAPÉ COMPLETO E DIRETRIZES PROFISSIONAIS ================= -->
+    <footer id="contact" class="relative bg-bg pt-16 sm:pt-24 md:pt-32 pb-10 sm:pb-12 overflow-hidden border-t border-stroke/50">
+      
+      <!-- Vídeo de Fundo do Rodapé -->
+      <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+        <video id="footer-video" class="absolute top-1/2 left-1/2 min-w-full min-h-full w-auto h-auto object-cover -translate-x-1/2 -translate-y-1/2 opacity-30 scale-y-[-1]" autoplay muted loop playsinline></video>
+        <div class="absolute inset-0 bg-black/70"></div>
+      </div>
+
+      <div class="relative z-10 max-w-[1200px] mx-auto px-5 sm:px-8 md:px-10 lg:px-16">
+        
+        <!-- Marquee Infinito GSAP -->
+        <div class="overflow-hidden whitespace-nowrap mb-12 sm:mb-16 py-3 sm:py-4 border-y border-white/10">
+          <div id="gsap-marquee" class="inline-block flex items-center gap-6 sm:gap-8 text-2xl sm:text-5xl lg:text-6xl font-display italic text-text-primary/20 uppercase tracking-widest select-none">
+            <span>DESENVOLVIDO POR LHSOLUDEV •</span>
+            <span>SOLUÇÕES WEB DE HIGH-END •</span>
+            <span>SITES QUE CONVERTEM •</span>
+            <span>DESIGN & ESTRATÉGIA •</span>
+            <span>DESENVOLVIDO POR LHSOLUDEV •</span>
+          </div>
+        </div>
+
+        <!-- Área de CTA Principal -->
+        <div class="flex flex-col items-center text-center max-w-2xl mx-auto mb-16 sm:mb-20">
+          <h2 class="text-3xl sm:text-5xl md:text-7xl font-display italic text-text-primary mb-6 sm:mb-8 leading-tight">
+            Vamos criar algo extraordinário.
+          </h2>
+
+          <a href="https://wa.me/5511970287704?text=Ol%C3%A1!%20Quero%20criar%20um%20site%20extraordin%C3%A1rio%20para%20o%20meu%20neg%C3%B3cio." target="_blank" rel="noopener noreferrer" class="group relative inline-flex items-center gap-3 rounded-full p-[1px] transition-transform duration-300 hover:scale-105 active:scale-95 w-full sm:w-auto justify-center cursor-pointer">
+            <span class="absolute inset-0 accent-gradient rounded-full opacity-100 animate-gradient-shift"></span>
+            <span class="relative px-7 py-3.5 sm:px-10 sm:py-5 bg-surface hover:bg-surface/90 rounded-full text-text-primary font-medium text-sm sm:text-lg flex items-center justify-center gap-3 w-full sm:w-auto">
+              Quero meu site ↗
+            </span>
+          </a>
+        </div>
+
+        <!-- Grade Principal de Conteúdo do Rodapé -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-10 pb-12 mb-12 border-b border-stroke/50 text-left">
+          
+          <!-- Coluna 1: Marca & Descrição -->
+          <div class="md:col-span-4 space-y-4">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-full p-[1px] accent-gradient">
+                <div class="w-full h-full bg-surface rounded-full flex items-center justify-center">
+                  <span class="font-bold text-xs text-white">LH</span>
+                </div>
+              </div>
+              <span class="font-semibold text-lg tracking-wider text-text-primary">LHSOLUDEV</span>
+            </div>
+            <p class="text-xs sm:text-sm text-muted leading-relaxed max-w-sm">
+              Desenvolvimento web de alta performance, interfaces memoráveis e arquiteturas orientadas à conversão para marcas exigentes.
+            </p>
+            <div class="pt-2">
+              <div class="inline-flex items-center gap-2.5 bg-surface/60 border border-stroke px-3.5 py-1.5 rounded-full">
+                <span class="relative flex h-2 w-2">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span class="text-[11px] text-text-primary/90 font-medium tracking-wide uppercase">Disponível para projetos</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Coluna 2: Navegação Institucional -->
+          <div class="md:col-span-3 space-y-3">
+            <span class="text-xs font-semibold text-text-primary uppercase tracking-widest block mb-4">Navegação</span>
+            <ul class="space-y-2 text-xs sm:text-sm text-muted">
+              <li><a href="#hero" class="hover:text-text-primary transition-colors">Início</a></li>
+              <li><a href="#apresentacao" class="hover:text-text-primary transition-colors">Sobre a Agência</a></li>
+              <li><a href="#selected-works" class="hover:text-text-primary transition-colors">Portfólio & Projetos</a></li>
+              <li><a href="#diferenciais" class="hover:text-text-primary transition-colors">Diferenciais Técnicos</a></li>
+              <li><a href="#journal" class="hover:text-text-primary transition-colors">Insights & Artigos</a></li>
+            </ul>
+          </div>
+
+          <!-- Coluna 3: Conexões & Redes -->
+          <div class="md:col-span-2 space-y-3">
+            <span class="text-xs font-semibold text-text-primary uppercase tracking-widest block mb-4">Redes</span>
+            <ul class="space-y-2 text-xs sm:text-sm text-muted">
+              <li><a href="https://wa.me/5511970287704" target="_blank" rel="noopener noreferrer" class="hover:text-text-primary transition-colors">WhatsApp</a></li>
+              <li><a href="https://instagram.com" target="_blank" rel="noopener noreferrer" class="hover:text-text-primary transition-colors">Instagram</a></li>
+              <li><a href="https://github.com" target="_blank" rel="noopener noreferrer" class="hover:text-text-primary transition-colors">GitHub</a></li>
+              <li><a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" class="hover:text-text-primary transition-colors">LinkedIn</a></li>
+            </ul>
+          </div>
+
+          <!-- Coluna 4: Diretrizes & Políticas Profissionais -->
+          <div class="md:col-span-3 space-y-3">
+            <span class="text-xs font-semibold text-text-primary uppercase tracking-widest block mb-4">Diretrizes & Legal</span>
+            <ul class="space-y-2 text-xs sm:text-sm text-muted">
+              <li><a href="javascript:void(0)" onclick="openModalLegal('privacidade')" class="hover:text-text-primary transition-colors">Política de Privacidade</a></li>
+              <li><a href="javascript:void(0)" onclick="openModalLegal('termos')" class="hover:text-text-primary transition-colors">Termos de Uso</a></li>
+              <li><a href="javascript:void(0)" onclick="openModalLegal('cookies')" class="hover:text-text-primary transition-colors">Diretrizes de Cookies</a></li>
+              <li><a href="javascript:void(0)" onclick="openModalLegal('seguranca')" class="hover:text-text-primary transition-colors">Conformidade & LGPD</a></li>
+            </ul>
+          </div>
+
+        </div>
+
+        <!-- Sub-Barra Inferior: Créditos e Assinatura -->
+        <div class="flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left text-xs text-muted font-mono">
+          <div>
+            © 2026 LH SOLUDEV. Todos os direitos reservados.
+          </div>
+
+          <div class="flex items-center gap-1.5 text-text-primary/80">
+            <span>Desenvolvido com precisão por</span>
+            <span class="px-2 py-0.5 rounded bg-surface border border-stroke text-white font-medium">lhsoludev</span>
+          </div>
+        </div>
+
+      </div>
+    </footer>
+
+  </main>
+
+
+  <!-- ================= MODAL JURÍDICO / DIRETRIZES PROFISSIONAIS ================= -->
+  <div id="legal-modal" class="fixed inset-0 z-[10000] hidden flex-col bg-black/90 backdrop-blur-xl p-4 sm:p-6 transition-opacity duration-300 overflow-y-auto">
+    <div class="max-w-2xl mx-auto w-full my-auto bg-surface border border-stroke rounded-3xl overflow-hidden shadow-2xl my-8">
+      <div class="p-6 border-b border-stroke/60 flex items-center justify-between bg-bg/40">
+        <h3 id="legal-modal-title" class="text-lg font-semibold text-text-primary uppercase tracking-wider">Diretrizes Institucionais</h3>
+        <button onclick="closeModalLegal()" class="text-muted hover:text-text-primary p-2 rounded-full bg-bg hover:bg-stroke transition-colors">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <div id="legal-modal-body" class="p-6 sm:p-8 space-y-4 text-xs sm:text-sm text-muted leading-relaxed max-h-[60vh] overflow-y-auto">
+        <!-- Conteúdo legal injetado dinamicamente -->
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ================= MODAL DE PRÉ-VISUALIZAÇÃO DE PROJETOS ================= -->
+  <div id="preview-modal" class="fixed inset-0 z-[10000] hidden flex-col bg-black/90 backdrop-blur-xl p-3 sm:p-6 transition-opacity duration-300">
+    <div class="flex items-center justify-between bg-surface border border-stroke px-4 sm:px-6 py-3 rounded-t-2xl">
+      <div class="flex items-center gap-3">
+        <span class="w-3 h-3 rounded-full bg-red-500/80"></span>
+        <span class="w-3 h-3 rounded-full bg-yellow-500/80"></span>
+        <span class="w-3 h-3 rounded-full bg-green-500/80"></span>
+        <span id="preview-modal-title" class="text-xs sm:text-sm font-medium text-text-primary ml-2 font-mono">Prévia ao Vivo</span>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <a id="preview-external-link" href="#" target="_blank" rel="noopener" class="text-xs text-muted hover:text-text-primary flex items-center gap-1 bg-bg/50 px-3 py-1.5 rounded-full border border-stroke">
+          Abrir em nova aba <i data-lucide="external-link" class="w-3 h-3"></i>
+        </a>
+        <button onclick="closePreviewModal()" class="text-muted hover:text-text-primary p-1.5 rounded-full hover:bg-stroke/50 transition-colors">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="relative w-full h-full bg-bg border-x border-b border-stroke rounded-b-2xl overflow-hidden flex items-center justify-center">
+      <div id="preview-loader" class="absolute flex flex-col items-center gap-3 text-xs text-muted">
+        <div class="w-6 h-6 border-2 border-text-primary border-t-transparent rounded-full animate-spin"></div>
+        Carregando projeto ao vivo...
+      </div>
+      <iframe id="preview-iframe" class="w-full h-full border-none relative z-10 opacity-0 transition-opacity duration-300" onload="document.getElementById('preview-loader').style.display='none'; this.style.opacity='1';"></iframe>
+    </div>
+  </div>
+
+
+  <!-- ================= MODAL DE LEITURA DE ARTIGOS ================= -->
+  <div id="article-modal" class="fixed inset-0 z-[10000] hidden flex-col bg-black/90 backdrop-blur-xl p-3 sm:p-6 transition-opacity duration-300 overflow-y-auto">
+    <div class="max-w-3xl mx-auto w-full my-auto bg-surface border border-stroke rounded-3xl overflow-hidden shadow-2xl my-6">
+      
+      <div class="p-6 sm:p-8 border-b border-stroke/60 flex items-center justify-between bg-bg/40">
+        <div class="flex items-center gap-3">
+          <span id="article-date" class="text-xs font-mono text-muted uppercase tracking-widest">AGO 22, 2026</span>
+          <span class="text-xs text-text-primary font-mono bg-surface px-3 py-1 rounded-full border border-stroke flex items-center gap-1">
+            <i data-lucide="clock" class="w-3 h-3 text-muted"></i> 3 min de leitura
+          </span>
+        </div>
+        <button onclick="closeArticleModal()" class="text-muted hover:text-text-primary p-2 rounded-full bg-bg hover:bg-stroke transition-colors">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="p-6 sm:p-10 space-y-6 text-text-primary/90 leading-relaxed">
+        <h2 id="article-title" class="text-2xl sm:text-4xl font-display italic text-text-primary">
+          Título do Artigo
+        </h2>
+
+        <div id="article-body" class="space-y-4 text-sm sm:text-base text-muted font-normal">
+        </div>
+
+        <div class="pt-8 border-t border-stroke/60 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <span class="text-xs text-muted">Precisa de uma estrutura pensada para conversão no seu negócio?</span>
+          <a href="https://wa.me/5511970287704?text=Ol%C3%A1!%20Li%20o%20artigo%20no%20seu%20site%20e%20gostaria%20de%20falar%20com%20um%20especialista." target="_blank" rel="noopener noreferrer" class="px-6 py-2.5 rounded-full bg-text-primary text-bg font-medium text-xs sm:text-sm hover:bg-white transition-colors w-full sm:w-auto text-center cursor-pointer">
+            Falar com especialista ✉
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ================= LÓGICA DE JAVASCRIPT ================= -->
+  <script>
+    lucide.createIcons();
+    gsap.registerPlugin(ScrollTrigger);
+
+    const legalTexts = {
+      privacidade: {
+        title: "Política de Privacidade",
+        content: "<p>Na <strong>LH SOLUDEV</strong>, a privacidade e a proteção dos seus dados são prioridades fundamentais. Coletamos apenas as informações necessárias enviadas via formulário ou contato de WhatsApp para prestação de serviços e atendimento direto. Seus dados nunca são comercializados com terceiros.</p>"
+      },
+      termos: {
+        title: "Termos de Uso",
+        content: "<p>Ao navegar em nosso portfólio, você concorda em respeitar os direitos de propriedade intelectual dos layouts, códigos e marcas expostos. Todos os projetos apresentados são de autoria ou representação técnica da <strong>LH SOLUDEV</strong>.</p>"
+      },
+      cookies: {
+        title: "Diretrizes de Cookies",
+        content: "<p>Este site utiliza cookies essenciais para otimização de navegação, medição de desempenho e salvamento de preferências de carregamento da interface. Ao continuar navegando, você concorda com nosso uso de armazenamento local.</p>"
+      },
+      seguranca: {
+        title: "Conformidade & LGPD",
+        content: "<p>Nossas estruturas atendem aos padrões da Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018). Você pode solicitar a remoção ou alteração de quaisquer dados pessoais mantidos em nossos canais de atendimento a qualquer momento.</p>"
+      }
+    };
+
+    function openModalLegal(type) {
+      const modal = document.getElementById('legal-modal');
+      const data = legalTexts[type];
+      if (data) {
+        document.getElementById('legal-modal-title').textContent = data.title;
+        document.getElementById('legal-modal-body').innerHTML = data.content;
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+      }
+    }
+
+    function closeModalLegal() {
+      const modal = document.getElementById('legal-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      document.body.style.overflow = 'auto';
+    }
+
+    const articlesData = {
+      1: {
+        title: "Por que seu negócio precisa de um site profissional",
+        date: "AGO 22, 2026",
+        body: `
+          <p class="text-text-primary/90 font-medium text-base sm:text-lg">
+            No cenário atual, seu site não é apenas um cartão de visitas digital: é a primeira impressão, o ponto de ancoragem e o canal primário onde a reputação da sua marca é validada.
+          </p>
+          <p>
+            Muitas empresas dependem exclusivamente de redes sociais para se comunicar. No entanto, depender apenas de plataformas de terceiros significa construir sua presença em terreno alugado. Mudanças de algoritmos e bloqueios podem cortar o acesso aos seus potenciais clientes da noite para o dia.
+          </p>
+          <h4 class="text-text-primary font-semibold text-base pt-2">1. Credibilidade e Autoridade Imediata</h4>
+          <p>
+            Quando um potencial cliente ouve falar do seu serviço, a primeira atitude é pesquisar no Google. Encontrar um site rápido, bem desenhado e responsivo passa a mensagem instantânea de que a empresa é sólida, profissional e comprometida com a qualidade.
+          </p>
+          <h4 class="text-text-primary font-semibold text-base pt-2">2. Controle Total da Experiência do Cliente</h4>
+          <p>
+            Em seu próprio site, você define a jornada inteira: do primeiro destaque visual até o botão final de contato ou compra. Não há distrações ou anúncios de concorrentes como acontece nas redes sociais.
+          </p>
+          <h4 class="text-text-primary font-semibold text-base pt-2">3. Funcionamento Ativo 24 Horas por Dia</h4>
+          <p>
+            Um site profissional continua tirando dúvidas, apresentando seus diferenciais e captando oportunidades enquanto você dorme ou atende outros clientes. É um ativo de vendas contínuo.
+          </p>
+        `
+      },
+      2: {
+        title: "O que faz um site transformar visitas em clientes",
+        date: "AGO 18, 2026",
+        body: `
+          <p class="text-text-primary/90 font-medium text-base sm:text-lg">
+            Atrair tráfego para uma página é apenas metade do caminho. O verdadeiro objetivo é transformar esses visitantes em leads qualificados e compradores recorrentes.
+          </p>
+          <p>
+            Sites que convertem de verdade combinam usabilidade intuitiva, arquitetura de informação limpa e copywriting focado na solução dos problemas do usuário.
+          </p>
+          <h4 class="text-text-primary font-semibold text-base pt-2">1. Proposta de Valor Clara no Topo</h4>
+          <p>
+            O visitante leva menos de 5 segundos para decidir se permanece ou fecha a aba. O topo da página precisa responder de imediato: o que você faz, para quem faz e qual o próximo passo.
+          </p>
+          <h4 class="text-text-primary font-semibold text-base pt-2">2. Redução do Atrito e Velocidade</h4>
+          <p>
+            Páginas lentas geram desistência imediata. Cada segundo de atraso no carregamento reduz drasticamente a taxa de conversão. Performance técnica é diretamente ligada ao faturamento.
+          </p>
+          <h4 class="text-text-primary font-semibold text-base pt-2">3. Chamadas para Ação (CTAs) Estratégicas</h4>
+          <p>
+            Botões claros e bem posicionados ao longo do fluxo de leitura orientam o usuário sem forçar a barra, facilitando a decisão de entrar em contato no momento certo.
+          </p>
+        `
+      },
+      3: {
+        title: "5 detalhes que aumentam a confiança no seu site",
+        date: "AGO 12, 2026",
+        body: `
+          <p class="text-text-primary/90 font-medium text-base sm:text-lg">
+            Confiança é a moeda principal do ambiente digital. Sem ela, nenhuma oferta se sustenta, independentemente do preço.
+          </p>
+          <p>
+            Pequenos ajustes visuais e estruturais enviam sinais subconscientes de segurança para quem está navegando no seu site pela primeira vez.
+          </p>
+          <h4 class="text-text-primary font-semibold text-base pt-2">1. Prova Social e Projetos Reais</h4>
+          <p>
+            Exibir casos de sucesso, depoimentos autênticos e links para projetos ao vivo prova que seu negócio entrega o que promete.
+          </p>
+          <h4 class="text-text-primary font-semibold text-base pt-2">2. Tipografia e Espaçamento Equilibrado</h4>
+          <p>
+            Textos amontoados e fontes inconsistentes passam a sensação de amadorismo. O uso inteligente de espaços em branco transmite sofisticação e ordem.
+          </p>
+          <h4 class="text-text-primary font-semibold text-base pt-2">3. Canais de Contato Acessíveis</h4>
+          <p>
+            Deixar links diretos para e-mail, WhatsApp e redes sociais visíveis no cabeçalho ou rodapé mostra transparência e prontidão no atendimento.
+          </p>
+          <h4 class="text-text-primary font-semibold text-base pt-2">4. Design Responsivo Impecável</h4>
+          <p>
+            Como mais de 70% dos acessos ocorrem via celular, um site que funciona sem quebras ou sobreposições no mobile demonstra respeito ao usuário.
+          </p>
+          <h4 class="text-text-primary font-semibold text-base pt-2">5. Certificado de Segurança SSL Ativo</h4>
+          <p>
+            O cadeado de conexão segura e o protocolo HTTPS garantem que a navegação e a troca de informações estão protegidas contra interceptações.
+          </p>
+        `
+      }
+    };
+
+    function openPreviewModal(url, title) {
+      const modal = document.getElementById('preview-modal');
+      const iframe = document.getElementById('preview-iframe');
+      const modalTitle = document.getElementById('preview-modal-title');
+      const externalLink = document.getElementById('preview-external-link');
+      const loader = document.getElementById('preview-loader');
+
+      loader.style.display = 'flex';
+      iframe.style.opacity = '0';
+      iframe.src = url;
+      modalTitle.textContent = title;
+      externalLink.href = url;
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closePreviewModal() {
+      const modal = document.getElementById('preview-modal');
+      const iframe = document.getElementById('preview-iframe');
+
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      iframe.src = '';
+      document.body.style.overflow = 'auto';
+    }
+
+    function openArticleModal(articleId) {
+      const article = articlesData[articleId];
+      if (!article) return;
+
+      document.getElementById('article-title').textContent = article.title;
+      document.getElementById('article-date').textContent = article.date;
+      document.getElementById('article-body').innerHTML = article.body;
+
+      const modal = document.getElementById('article-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeArticleModal() {
+      const modal = document.getElementById('article-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      document.body.style.overflow = 'auto';
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closePreviewModal();
+        closeArticleModal();
+        closeModalLegal();
+      }
+    });
+
+    // Tela de carregamento
+    const loader = document.getElementById('loader');
+    const loaderCounter = document.getElementById('loader-counter');
+    const loaderProgress = document.getElementById('loader-progress');
+    const loaderWord = document.getElementById('loader-word');
+    
+    const words = ["Conecte", "Crie", "Inspire"];
+    let wordIndex = 0;
+    let count = 6;
+    const duration = 2400;
+    const startTime = performance.now();
+
+    gsap.to('.loader-fade-in', {
+      opacity: 1,
+      y: 0,
+      duration: 0.8,
+      stagger: 0.1,
+      ease: 'power2.out'
+    });
+
+    const wordInterval = setInterval(() => {
+      wordIndex = (wordIndex + 1) % words.length;
+      loaderWord.style.opacity = '0';
+      loaderWord.style.transform = 'translateY(-16px)';
+      
+      setTimeout(() => {
+        loaderWord.textContent = words[wordIndex];
+        loaderWord.style.transform = 'translateY(16px)';
+        setTimeout(() => {
+          loaderWord.style.opacity = '1';
+          loaderWord.style.transform = 'translateY(0)';
+        }, 50);
+      }, 200);
+    }, 750);
+
+    setTimeout(() => {
+      loaderWord.style.opacity = '1';
+      loaderWord.style.transform = 'translateY(0)';
+    }, 100);
+
+    function updateCounter(currentTime) {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      count = Math.floor(progress * 100);
+      loaderCounter.textContent = String(count).padStart(3, "0");
+      loaderProgress.style.transform = `scaleX(${progress})`;
+
+      if (progress < 1) {
+        requestAnimationFrame(updateCounter);
+      } else {
+        clearInterval(wordInterval);
+        setTimeout(() => {
+          gsap.to(loader, {
+            yPercent: -100,
+            duration: 0.8,
+            ease: "power4.inOut",
+            onComplete: () => {
+              loader.style.display = 'none';
+              triggerHeroEntrance();
+            }
+          });
+        }, 300);
+      }
+    }
+    requestAnimationFrame(updateCounter);
+
+    // Vídeos HLS
+    const hlsSource = "https://stream.mux.com/Aa02T7oM1wH5Mk5EEVDYhbZ1ChcdhRsS2m1NYyx4Ua1g.m3u8";
+    const heroVideo = document.getElementById('hero-video');
+    const footerVideo = document.getElementById('footer-video');
+
+    function setupHlsVideo(videoElem) {
+      if (!videoElem) return;
+      if (Hls.isSupported()) {
+        const hls = new Hls({ enableWorker: true });
+        hls.loadSource(hlsSource);
+        hls.attachMedia(videoElem);
+      } else if (videoElem.canPlayType('application/vnd.apple.mpegurl')) {
+        videoElem.src = hlsSource;
+      }
+    }
+
+    setupHlsVideo(heroVideo);
+    setupHlsVideo(footerVideo);
+
+    function triggerHeroEntrance() {
+      const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+
+      tl.fromTo(".hero-name-reveal", 
+        { opacity: 0, y: 50 }, 
+        { opacity: 1, y: 0, duration: 1.2 }
+      )
+      .fromTo(".hero-blur-in", 
+        { opacity: 0, y: 20, filter: "blur(10px)" }, 
+        { opacity: 1, y: 0, filter: "blur(0px)", duration: 1, stagger: 0.15 }, 
+        "-=0.8"
+      );
+    }
+
+    window.addEventListener('scroll', () => {
+      const nav = document.getElementById('navbar-inner');
+      if (window.scrollY > 80) {
+        nav.classList.add('shadow-black/40', 'border-white/20', 'bg-surface/90');
+      } else {
+        nav.classList.remove('shadow-black/40', 'border-white/20', 'bg-surface/90');
+      }
+    });
+
+    gsap.utils.toArray('.reveal-section').forEach((sec) => {
+      gsap.fromTo(sec, 
+        { opacity: 0, y: 40 }, 
+        { 
+          opacity: 1, 
+          y: 0, 
+          duration: 1, 
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: sec,
+            start: "top 85%",
+          }
+        }
+      );
+    });
+
+    gsap.fromTo('.bento-card', 
+      { opacity: 0, y: 50 }, 
+      { 
+        opacity: 1, 
+        y: 0, 
+        duration: 0.8, 
+        stagger: 0.15, 
+        ease: "power3.out",
+        scrollTrigger: {
+          trigger: '#selected-works',
+          start: "top 70%",
+        }
+      }
+    );
+
+    gsap.fromTo('.journal-card', 
+      { opacity: 0, x: -30 }, 
+      { 
+        opacity: 1, 
+        x: 0, 
+        duration: 0.8, 
+        stagger: 0.1, 
+        ease: "power2.out",
+        scrollTrigger: {
+          trigger: '#journal',
+          start: "top 75%",
+        }
+      }
+    );
+
+    const statNumbers = document.querySelectorAll('.stat-number');
+    statNumbers.forEach((stat) => {
+      const target = parseInt(stat.getAttribute('data-target'));
+      gsap.to(stat, {
+        innerText: target,
+        duration: 2,
+        snap: { innerText: 1 },
+        ease: "power1.out",
+        scrollTrigger: {
+          trigger: stat,
+          start: "top 85%",
+        },
+        onUpdate: function() {
+          if (target === 4 || target === 19) {
+            stat.innerText = Math.ceil(this.targets()[0].innerText) + "+";
+          } else if (target === 100) {
+            stat.innerText = Math.ceil(this.targets()[0].innerText) + "%";
+          } else if (target === 24) {
+            stat.innerText = Math.ceil(this.targets()[0].innerText) + "H";
+          }
+        }
+      });
+    });
+
+    gsap.to('#gsap-marquee', {
+      xPercent: -50,
+      duration: 25,
+      ease: "none",
+      repeat: -1
+    });
+  </script>
+</body>
+</html>
